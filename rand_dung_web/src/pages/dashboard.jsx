@@ -14,7 +14,13 @@ export function Dashboard() {
         if(auth.currentUser == null) return;
         const uid = auth.currentUser.uid;
         const querySnapshot = await getDocs(collection(db, `users/${uid}/projects`));
-        setProjects(querySnapshot);
+        const projects = [];
+        for(const doc of querySnapshot.docs) {
+            const projectId = doc.data()["project-id"];
+            const projectDoc = await getDocs(doc(db, `projects/${projectId}`)); //not secure right now, need a way to check uid within database; may not need to if we decide hashing the name will be enough security.
+            projects.push(projectDoc);
+        }
+        setProjects(projects);
     }
 
     useEffect(() => {
@@ -25,6 +31,7 @@ export function Dashboard() {
         const uid = auth.currentUser.uid;
 
         await deleteDoc(doc(db, `users/${uid}/projects/${projectId}`));
+        await deleteDoc(doc(db, `projects/${projectId}`));
         
         fetchProjects();
     }

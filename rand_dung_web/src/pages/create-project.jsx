@@ -34,16 +34,22 @@ export function CreateProject() {
 
     function uploadNewProject(name, description) {
         const uid = auth.currentUser.uid;
-        const docRef = doc(db, `users/${uid}/projects/${name}`);
+        const docRef1 = doc(db, `users/${uid}/projects/${name}`);
+        const docRef2 = doc(db, `projects/${name}`);
 
         setProjectStatus("creating");
 
-        setDoc(docRef, {
-            title: name,
-            description: description,
-            "gen-type": "none",
+        setDoc(docRef1, {
+            "project-id": name, //later we can hash the name into an actual project-id to make it more secure
         }).then(() => {
-            navigate("/dashboard");
+            setDoc(docRef2, {
+                title: name,
+                description: description,
+                "gen-type": "none",
+                "allowed-users": [uid],
+            }).then(() => {
+                navigate("/dashboard");
+            })
         })
         
     }

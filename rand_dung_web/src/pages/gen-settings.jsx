@@ -87,7 +87,7 @@ function GenerationSettingsContent({ projectName, selectedGenerationTypeId }) {
             }
 
             try {
-                const projectSnapshot = await getDoc(doc(db, `users/${uid}/projects/${projectName}`));
+                const projectSnapshot = await getDoc(doc(db, `projects/${projectName}`));
                 if (active) {
                     setProjectState(projectSnapshot.exists()
                         ? { status: "found", project: projectSnapshot.data() }
@@ -160,7 +160,7 @@ function GenerationSettingsContent({ projectName, selectedGenerationTypeId }) {
                 if (!uid) throw new Error("No signed-in user");
 
                 const settingsSnapshot = await getDoc(
-                    doc(db, `users/${uid}/projects/${projectName}/gen-settings/settings`),
+                    doc(db, `projects/${projectName}/gen-settings/settings`),
                 );
                 const settings = settingsSnapshot.exists() ? settingsSnapshot.data() : {};
 
@@ -191,7 +191,7 @@ function GenerationSettingsContent({ projectName, selectedGenerationTypeId }) {
             if (!uid) throw new Error("No signed-in user");
 
             await setDoc(
-                doc(db, `users/${uid}/projects/${projectName}/gen-settings/settings`),
+                doc(db, `projects/${projectName}/gen-settings/settings`),
                 parseRandomWalkSettings(randomWalkSettings),
                 { merge: true },
             );

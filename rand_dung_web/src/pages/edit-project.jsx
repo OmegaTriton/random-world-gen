@@ -230,8 +230,8 @@ function EditProjectCard({ projectName }) {
             const uid = auth.currentUser?.uid;
             if (!uid) return false;
 
-            const projectRef = doc(db, `users/${uid}/projects/${projectName}`);
-            const settingsRef = doc(db, `users/${uid}/projects/${projectName}/gen-settings/settings`);
+            const projectRef = doc(db, `projects/${projectName}`); //not secure right now
+            const settingsRef = doc(db, `projects/${projectName}/gen-settings/settings`);
             const batch = writeBatch(db);
             batch.delete(settingsRef);
             batch.update(projectRef, {
@@ -255,7 +255,7 @@ function EditProjectCard({ projectName }) {
             if (!uid) return;
 
             try {
-                const projectSnapshot = await getDoc(doc(db, `users/${uid}/projects/${projectName}`));
+                const projectSnapshot = await getDoc(doc(db, `projects/${projectName}`));
                 if (active) {
                     setProjectState(projectSnapshot.exists()
                         ? { status: "found", project: projectSnapshot.data() }
@@ -310,7 +310,7 @@ function EditProjectCard({ projectName }) {
 
                             try {
                                 const uid = auth.currentUser.uid;
-                                await updateDoc(doc(db, `users/${uid}/projects/${projectName}`), {
+                                await updateDoc(doc(db, `projects/${projectName}`), {
                                     "gen-type": selectedGenerationType.label,
                                 });
 
