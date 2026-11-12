@@ -46,6 +46,10 @@ export function Dashboard() {
         });
     }
 
+    async function shareProject(projectId) {
+
+    }
+
     function getProjects() {
         if(projects == null || projects.docs.length == 0) return (
             <div className="w-full flex justify-center items-center gap-10 p-10">
@@ -70,7 +74,9 @@ export function Dashboard() {
             <div className="w-full flex justify-center flex-wrap gap-10 p-10">
                 {projects.docs.map((project) => (
                     <Project key={project.id} name={project.data().title} 
-                    description={project.data().description} onDelete={async () => await deleteProject(project.id)}/>
+                    description={project.data().description} 
+                    onDelete={async () => await deleteProject(project.id)}
+                    onShare={async () => await shareProject(project.id)}/>
                 ))}
             </div>
         );
