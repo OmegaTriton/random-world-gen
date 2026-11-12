@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { auth, db } from "@/App.jsx";
 import { useNavigate } from "react-router-dom";
-import { doc, setDoc } from "firebase/firestore"; 
+import { doc, setDoc, writeBatch } from "firebase/firestore"; 
 
 export function CreateProject() {
     let [projectName, setProjectName] = useState("new-project");
@@ -38,20 +38,20 @@ export function CreateProject() {
         const docRef2 = doc(db, `projects/${name}`);
 
         setProjectStatus("creating");
-
-        setDoc(docRef1, {
-            "project-id": name, //later we can hash the name into an actual project-id to make it more secure
-        }).then(() => {
-            setDoc(docRef2, {
-                title: name,
-                description: description,
-                "gen-type": "none",
-                "allowed-users": [uid],
-            }).then(() => {
-                navigate("/dashboard");
-            })
-        })
         
+        const batch = writeBatch(db);
+        batch.set(docRef1, {
+            "project-id": name, //later we can hash the name into an actual project-id to make it more secure
+        });
+        batch.set(docRef2, {
+            title: name,
+            description: description,
+            "gen-type": "none",
+            "allowed-users": [uid],
+        });
+        batch.commit().then(() => {
+            navigate("/dashboard");
+        });
     }
         
 
