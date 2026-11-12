@@ -1,6 +1,6 @@
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Project } from "@/components/project";
-import { getDocs, collection, doc, deleteDoc } from "firebase/firestore"; 
+import { getDocs, collection, doc, getDoc, where, query, writeBatch } from "firebase/firestore"; 
 import { useState, useEffect } from "react";
 import { db, auth } from "@/App.jsx";
 import { Button } from "@/components/ui/button";
@@ -11,17 +11,16 @@ export function Dashboard() {
     const navigate = useNavigate();
 
     const fetchProjects = async () => {
-        if(auth.currentUser == null) return;
-        const uid = auth.currentUser.uid;
-        const querySnapshot = await getDocs(collection(db, `users/${uid}/projects`));
-        const projects = [];
-        for(const doc of querySnapshot.docs) {
-            const projectId = doc.data()["project-id"];
-            const projectDoc = await getDocs(doc(db, `projects/${projectId}`)); //not secure right now, need a way to check uid within database; may not need to if we decide hashing the name will be enough security.
-            projects.push(projectDoc);
-        }
-        setProjects(projects);
-    }
+        if (auth.currentUser == null) return;
+
+        const projectsQuery = query(
+            collection(db, "projects"),
+            where("allowed-users", "array-contains", auth.currentUser.uid)
+        );
+
+        const querySnapshot = await getDocs(projectsQuery);
+        setProjects(querySnapshot);
+    };
 
     useEffect(() => {
         fetchProjects();
@@ -30,10 +29,21 @@ export function Dashboard() {
     async function deleteProject(projectId) {
         const uid = auth.currentUser.uid;
 
-        await deleteDoc(doc(db, `users/${uid}/projects/${projectId}`));
-        await deleteDoc(doc(db, `projects/${projectId}`));
-        
-        fetchProjects();
+        const batch = writeBatch(db);
+
+        //deleting project from all users' subcollections
+        const projectDoc = await getDoc(doc(db, `projects/${projectId}`));
+        for(const user of projectDoc.data()["allowed-users"]) {
+            batch.delete(doc(db, `users/${user}/projects/${projectId}`));
+        }
+
+        //delete the sub-collection - deleting a doc, does not delete subcollections
+        batch.delete(doc(db, `projects/${projectId}/gen-settings/settings`))
+        .delete(doc(db, `projects/${projectId}`)); //delete the project doc
+
+        batch.commit().then(() => {
+            fetchProjects();
+        });
     }
 
     function getProjects() {
